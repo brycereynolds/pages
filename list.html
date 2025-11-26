@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Shopping Checklist</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+            --subtext: #6b7280;
+            --note-bg: #eff6ff;
+            --note-text: #1e40af;
+            --checked: #9ca3af;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: var(--card);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+
+        header {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: #111827;
+        }
+
+        .category {
+            margin-bottom: 24px;
+        }
+
+        .category-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            font-weight: 700;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary);
+            padding-left: 8px;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Checkbox Styling */
+        .checkbox-wrapper {
+            position: relative;
+            height: 20px;
+            width: 20px;
+            margin-right: 12px;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        input[type="checkbox"] {
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+            position: absolute;
+            margin: 0;
+        }
+
+        .custom-check {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            z-index: 1;
+            transition: all 0.2s;
+        }
+
+        input[type="checkbox"]:checked + .custom-check {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .custom-check::after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        input[type="checkbox"]:checked + .custom-check::after {
+            display: block;
+        }
+
+        /* Text Layout */
+        .item-text {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-line {
+            line-height: 1.5;
+        }
+
+        .quantity {
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .name {
+            color: #374151;
+        }
+
+        /* Store Guide / Note Styling */
+        .store-note {
+            font-size: 0.85rem;
+            color: var(--note-text);
+            background-color: var(--note-bg);
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 4px;
+            align-self: flex-start;
+            border: 1px solid #dbeafe;
+        }
+
+        /* Checked State */
+        .item.checked .quantity,
+        .item.checked .name {
+            text-decoration: line-through;
+            color: var(--checked);
+        }
+
+        .item.checked .store-note {
+            opacity: 0.5;
+            text-decoration: none; /* Don't strikethrough the help text, just fade it */
+        }
+
+        .progress-container {
+            background-color: #e5e7eb;
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .reset-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🛒 Smart Shopping List</h1>
+        <button class="reset-btn" onclick="resetList()">Reset</button>
+    </header>
+
+    <!-- Dairy Section -->
+    <div class="category">
+        <div class="category-title">Dairy</div>
+        <ul class="item-list">
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">6¾ cups</span> <span class="name">Heavy cream</span>
+                    </div>
+                    <!-- 54 oz needed. 1 qt = 32oz. 2 qts = 64oz. Half gallon = 64oz. -->
+                    <span class="store-note">ℹ️ Buy: 2 Quarts or 1 Half-Gallon (Need ~54 oz)</span>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">2 cans (14oz)</span> <span class="name">Sweetened condensed milk</span>
+                    </div>
+                    <span class="store-note">ℹ️ Baking aisle standard size</span>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">¾ pound</span> <span class="name">Vermont aged white cheddar</span>
+                    </div>
+                    <span class="store-note">ℹ️ Deli counter or approx 1 large block</span>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">6 tbsp</span> <span class="name">Butter</span>
+                    </div>
+                    <span class="store-note">ℹ️ Uses approx. ¾ of 1 stick</span>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">2</span> <span class="name">Eggs</span>
+                    </div>
+                    <span class="store-note">ℹ️ Check fridge first!</span>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">1 tub</span> <span class="name">Whipped cream</span>
+                    </div>
+                    <span class="store-note">ℹ️ Frozen section (Cool Whip) or Can</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Produce Section -->
+    <div class="category">
+        <div class="category-title">Produce & Beverages</div>
+        <ul class="item-list">
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">8 cups</span> <span class="name">Bananas (barely ripe)</span>
+                    </div>
+                    <span class="store-note">ℹ️ Buy: ~8 to 10 medium bananas</span>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">3 lbs</span> <span class="name">Russet potatoes (medium)</span>
+                    </div>
+                    <span class="store-note">ℹ️ Buy: 5lb bag or ~6-8 loose potatoes</span>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">1 jug</span> <span class="name">Apple cider</span>
+                    </div>
+                    <span class="store-note">ℹ️ Produce section (chilled) usually</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Pantry Section -->
+    <div class="category">
+        <div class="category-title">Pantry & Dry Goods</div>
+        <ul class="item-list">
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">2 boxes (4oz)</span> <span class="name">Instant vanilla pudding</span>
+                    </div>
+                </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">2 boxes (12oz)</span> <span class="name">Nilla wafers</span>
+                    </div>
+                </div>
+            </li>
+            <li class="item" onclick="toggleItem(this)">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox">
+                    <span class="custom-check"></span>
+                </div>
+                <div class="item-text">
+                    <div class="main-line">
+                        <span class="quantity">As needed</span> <span class="name">Kosher salt</span>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+</div>
+
+<script>
+    function toggleItem(li) {
+        // Find the checkbox inside the clicked li
+        const checkbox = li.querySelector('input[type="checkbox"]');
+        
+        // Toggle the checked state
+        checkbox.checked = !checkbox.checked;
+        
+        // Update the visual class on the li
+        if (checkbox.checked) {
+            li.classList.add('checked');
+        } else {
+            li.classList.remove('checked');
+        }
+        
+        updateProgress();
+    }
+
+    // Prevent double toggling when clicking directly on the checkbox
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const li = e.target.closest('.item');
+            if (e.target.checked) {
+                li.classList.add('checked');
+            } else {
+                li.classList.remove('checked');
+            }
+            updateProgress();
+        });
+    });
+
+    function updateProgress() {
+        const total = document.querySelectorAll('.item').length;
+        const checked = document.querySelectorAll('.item.checked').length;
+        const percentage = (checked / total) * 100;
+        document.getElementById('progressBar').style.width = percentage + '%';
+    }
+
+    function resetList() {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            cb.closest('.item').classList.remove('checked');
+        });
+        updateProgress();
+    }
+</script>
+
+</body>
+</html>
